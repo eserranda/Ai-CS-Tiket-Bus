@@ -3,6 +3,7 @@ package chatgpt
 import (
 	"context"
 	"cs-assistant/utils"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -10,6 +11,12 @@ import (
 
 	"github.com/sashabaranov/go-openai"
 )
+
+type TicketRequest struct {
+	Tujuan  string `json:"tujuan"`
+	Tanggal string `json:"tanggal"`
+	Waktu   string `json:"waktu"`
+}
 
 type ChatGPTClient struct {
 	client   *openai.Client
@@ -41,11 +48,12 @@ func (c *ChatGPTClient) GetChatGPTResponse(ctx context.Context, user_message str
 		Role:    openai.ChatMessageRoleUser,
 		Content: user_message,
 	})
+	fmt.Println("Panjang pesan :", len(c.messages))
 
 	// sudah di coba dan sangat tidak efektif
 	// Hanya mengirimkan 3 pesan terakhir, jika lebih dari itu, kita bisa membatasi
-	// if len(c.messages) > 3 {
-	// 	c.messages = c.messages[len(c.messages)-3:] // Ambil 3 pesan terakhir
+	// if len(c.messages) > 7 {
+	// 	c.messages = c.messages[len(c.messages)-7:] // Ambil 3 pesan terakhir
 	// }
 
 	// Memanggil API ChatGPT untuk mendapatkan respons
@@ -63,7 +71,6 @@ func (c *ChatGPTClient) GetChatGPTResponse(ctx context.Context, user_message str
 	}
 
 	if len(resp.Choices) > 0 {
-		// Mendapatkan respons dari ChatGPT
 		assistantResponse := resp.Choices[0].Message.Content
 
 		// Menambahkan respons asisten ke riwayat percakapan
@@ -72,10 +79,21 @@ func (c *ChatGPTClient) GetChatGPTResponse(ctx context.Context, user_message str
 			Content: assistantResponse,
 		})
 
+		var requestData TicketRequest
+		err := json.Unmarshal([]byte(assistantResponse), &requestData)
+		if err != nil {
+			fmt.Println("Error parsing JSON:", err)
+			return assistantResponse, nil
+		}
+
+		fmt.Println("Data tujuan  :", requestData.Tujuan)
+		fmt.Println("Data tanggal :", requestData.Tanggal)
+		fmt.Println("Data waktu   :", requestData.Waktu)
+
+		// proses data dari Database
+		return "", nil
 	} else {
 		fmt.Println("Tidak ada respons yang diterima dari API.")
+		return "", nil
 	}
-
-	// Mengembalikan error jika tidak ada pilihan dari API
-	return resp.Choices[0].Message.Content, nil
 }

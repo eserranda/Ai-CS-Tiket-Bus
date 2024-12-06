@@ -17,8 +17,8 @@ func checkMessage(messageTimestamp time.Time) error {
 	currentTime := time.Now()
 
 	// Batas Waktu 10 menit
-	// allowedDuration := 10 * time.Minute
-	allowedDuration := 5 * time.Second
+	allowedDuration := 10 * time.Minute
+	// allowedDuration := 5 * time.Second
 
 	// Hitung selisih waktu antara waktu sekarang dan waktu pesan
 	timeDifference := currentTime.Sub(messageTimestamp)
@@ -42,10 +42,10 @@ func (w *WhatsappmeowClient) SetEventsHandler(ctx context.Context, chatgptClient
 
 			var message string
 			if e.Message.ExtendedTextMessage.GetText() != "" {
-				// fmt.Println("Mesasage from Whatsapp Web")
+				fmt.Println("Mesasage from Whatsapp Web")
 				message = e.Message.ExtendedTextMessage.GetText()
 			} else if e.Message.GetConversation() != "" {
-				// fmt.Println("Mesasage from Whatsapp Mobile")
+				fmt.Println("Mesasage from Whatsapp Mobile")
 				message = e.Message.GetConversation()
 			}
 
@@ -77,6 +77,7 @@ func (w *WhatsappmeowClient) SetEventsHandler(ctx context.Context, chatgptClient
 			}
 
 			if response == "" {
+				fmt.Println("Response is empty")
 				return
 			}
 
