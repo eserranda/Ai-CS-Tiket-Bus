@@ -2,7 +2,7 @@ package whatsapp
 
 import (
 	"context"
-	"cs-assistant/chatgpt"
+	"cs-assistant/model"
 	"errors"
 	"fmt"
 	"log"
@@ -31,7 +31,7 @@ func checkMessage(messageTimestamp time.Time) error {
 	return nil
 }
 
-func (w *WhatsappmeowClient) SetEventsHandler(ctx context.Context, chatgptClient *chatgpt.ChatGPTClient) {
+func (w *WhatsappmeowClient) SetEventsHandler(ctx context.Context, openai_uc model.OpenAIUsecase) {
 	w.client.AddEventHandler(func(evt interface{}) {
 		switch e := evt.(type) {
 		case *events.Message:
@@ -70,7 +70,9 @@ func (w *WhatsappmeowClient) SetEventsHandler(ctx context.Context, chatgptClient
 			// tandai pesan sebagai dibaca
 			w.MarkMessageAsReadAndTypingStatus(e.Info.ID, e.Info.Chat, e.Info.Sender)
 			// Kirim pesan ke ChatGPT
-			response, err := chatgptClient.GetChatGPTResponse(ctx, message)
+			phone_number := e.Info.Chat.User
+
+			response, err := openai_uc.GetChatGPTResponse(ctx, phone_number, message)
 			if err != nil {
 				log.Println(err)
 				return

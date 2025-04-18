@@ -1,8 +1,8 @@
 services:
 
   myapp:
-    image: golang:1.22-alpine
-    container_name: ai-tiket-bus
+    image: golang:1.24-alpine3.20
+    container_name: whatsapp-bot
     volumes:
       - ./app:/go/src/app
     build:
@@ -11,4 +11,31 @@ services:
     ports:
       - 8787:8787
     restart: always
-   
+    depends_on:
+      - mariadb
+    networks:
+      - network1
+
+  mariadb:
+    image: mariadb:10.7
+    container_name: mariadb
+    restart: always
+    ports:
+      - 3307:3306
+    volumes:
+      - ./configs/mysql/conf.d:/etc/mysql/conf.d
+      - ./volumes/database:/var/lib/mysql
+      - ./volumes/sql:/sql
+    networks:
+      - network1
+    env_file:
+      - .env
+    healthcheck:
+      test: [ 'CMD', 'mysqladmin', 'ping', '-u', 'root', '-p${MARIADB_ROOT_PASSWORD}' ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+networks:
+  network1:
+    driver: bridge

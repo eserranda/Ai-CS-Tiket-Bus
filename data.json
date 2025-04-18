@@ -1,0 +1,28 @@
+{
+    "name": "check_ticket_availability",
+    "description": "Checks the availability of tickets based on destination, date, and time.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "required": [
+        "destination",
+        "date",
+        "departure_time"
+      ],
+      "properties": {
+        "destination": {
+          "type": "string",
+          "description": "The destination for which ticket availability is being checked."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date for which ticket availability is being checked, formatted as YYYY-MM-DD."
+        },
+        "departure_time": {
+          "type": "string",
+          "description": "This name is quite general and describes the departure time well. For example, the value variable could be morning or evening."
+        }
+      },
+      "additionalProperties": false
+    }
+  }

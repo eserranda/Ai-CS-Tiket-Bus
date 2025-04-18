@@ -2,7 +2,6 @@ package model
 
 import (
 	"context"
-	"cs-assistant/chatgpt"
 
 	"go.mau.fi/whatsmeow/types"
 )
@@ -10,6 +9,6 @@ import (
 type WhatsAppClient interface {
 	Connect(ctx context.Context) error
 	Disconnect() error
-	SetEventsHandler(ctx context.Context, chatgptClient *chatgpt.ChatGPTClient)
+	SetEventsHandler(ctx context.Context) error
 	SendMessage(ctx context.Context, infoChat, infoSender types.JID, message string) error
 }

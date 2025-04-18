@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine
+FROM golang:1.24-alpine3.20
 
 # RUN apk update && apk upgrade 
 
@@ -24,4 +24,4 @@ RUN go mod download
 COPY . .
 
 # Menjalankan aplikasi
-ENTRYPOINT ["go", "run", "main.go"]
+CMD ["go", "run", "main.go"]

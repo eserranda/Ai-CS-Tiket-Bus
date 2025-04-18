@@ -2,7 +2,6 @@ package whatsapp
 
 import (
 	"context"
-	"cs-assistant/model"
 	"fmt"
 	"os"
 
@@ -16,7 +15,7 @@ type WhatsappmeowClient struct {
 	client *whatsmeow.Client
 }
 
-func NewWhatsappmeowClient() (model.WhatsAppClient, error) {
+func NewWhatsappmeowClient() (*WhatsappmeowClient, error) {
 	logger := waLog.Stdout("Database", "DEBUG", true)
 
 	// Menghubungkan ke database menggunakan sqlstore
@@ -31,8 +30,12 @@ func NewWhatsappmeowClient() (model.WhatsAppClient, error) {
 		return nil, err
 	}
 
+	clientLog := waLog.Stdout("Client", "DEBUG", true)
 	// Membuat Whatsmeow client
-	client := whatsmeow.NewClient(deviceStore, logger)
+	client := whatsmeow.NewClient(
+		deviceStore,
+		clientLog,
+	)
 
 	return &WhatsappmeowClient{
 		client: client,

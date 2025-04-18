@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
-	"cs-assistant/chatgpt"
+	"cs-assistant/openai"
+	"cs-assistant/service"
+	"cs-assistant/utils"
 	"cs-assistant/whatsapp"
 	"log"
 	"os"
@@ -11,33 +13,61 @@ import (
 
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/sync/errgroup"
+	"gorm.io/gorm"
 )
+
+func bootstrap() *gorm.DB {
+	mysql_chan := make(chan *gorm.DB, 1)
+
+	errgrp := errgroup.Group{}
+
+	errgrp.Go(func() error {
+		db, err := utils.ConnectToMariaDB()
+		if err != nil {
+			return err
+		}
+		mysql_chan <- db
+
+		// // Migrate database
+		// if err := db.AutoMigrate(&chatgpt.ChatSession{}); err != nil {
+		// 	return err
+		// }
+
+		return nil
+	})
+
+	if err := errgrp.Wait(); err != nil {
+		panic(err)
+	}
+
+	return <-mysql_chan
+}
 
 func main() {
 	godotenv.Load(".env")
 	ctx := context.Background()
+	mysql_db := bootstrap()
 
-	waClient, err := whatsapp.NewWhatsappmeowClient()
+	wa_client, err := whatsapp.NewWhatsappmeowClient()
 	if err != nil {
+		log.Fatalf("Failed to create WhatsApp client: %v", err)
 		return
 	}
 
-	// Membuat client ChatGPT
-	chatgptClient := chatgpt.NewChatGPTClient(ctx)
-
-	if err := waClient.Connect(ctx); err != nil {
+	if err := wa_client.Connect(ctx); err != nil {
 		log.Fatalf("Failed to connect to WhatsApp: %v", err)
+		return
 	}
+	defer wa_client.Disconnect()
 
-	// Set event handler untuk WhatsApp
-	waClient.SetEventsHandler(ctx, chatgptClient)
+	// Menginisialisasi service OpenAI dan database connection
+	openAIService := service.NewOpenAIService()
 
-	defer func() {
-		// menutup koneksi WhatsApp saat program selesai
-		if err := waClient.Disconnect(); err != nil {
-			log.Printf("Error while disconnecting WhatsApp: %v", err)
-		}
-	}()
+	openai_repository := openai.NewOpenAIRepository(mysql_db, openAIService)
+	openai_usecase := openai.NewOpenAIUsecase(openai_repository)
+
+	wa_client.SetEventsHandler(ctx, openai_usecase)
 
 	setupSignalHandler()
 }
